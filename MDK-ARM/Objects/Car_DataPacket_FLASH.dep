@@ -298,7 +298,7 @@ I (..\System\delay\delay.h)(0x63935EDE)
 I (..\Hardware\LED\led.h)(0x63BFC994)
 I (..\FWLIB\inc\stm32f10x_rcc.h)(0x62C82234)
 I (..\FWLIB\inc\stm32f10x_gpio.h)(0x62C82234)
-I (..\Hardware\car\car.h)(0x63C84ABC)
+I (..\Hardware\car\car.h)(0x63C84B6E)
 I (..\Hardware\mottor\motor.h)(0x63BEEEA8)
 I (..\Hardware\ble\ble.h)(0x63C7F0A7)
 I (..\Periph\timer\timer.h)(0x63C58706)
@@ -436,7 +436,7 @@ I (D:\Keil_v5\ARM\ARMCLANG\include\stdbool.h)(0x637AECBC)
 I (..\FWLIB\inc\stm32f10x_rcc.h)(0x62C82234)
 I (..\FWLIB\inc\stm32f10x_gpio.h)(0x62C82234)
 F (..\Hardware\car\car.c)(0x63C849CD)(-xc -std=gnu90 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../Core -I ../FWLIB/inc -I ../User -I ../System/SYS -I ../System/delay -I ../System/usart -I ../FreeRTOS/include -I ../FreeRTOS/portable/RVDS/ARM_CM3 -I ../Periph/timer -I ../Hardware/LED -I ../Hardware/mottor -I ../Hardware/car -I ../Hardware/ble-ID:/Users/YEWAN/AppData/Local/Arm/Packs/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o ./objects/car.o -MD)
-I (..\Hardware\car\car.h)(0x63C84ABC)
+I (..\Hardware\car\car.h)(0x63C84B6E)
 I (..\System\SYS\sys.h)(0x63C6BCBF)
 I (..\User\stm32f10x.h)(0x6319AD62)
 I (..\Core\core_cm3.h)(0x62C82234)
