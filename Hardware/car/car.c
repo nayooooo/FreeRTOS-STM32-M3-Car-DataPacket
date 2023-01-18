@@ -217,8 +217,18 @@ static void Car_Low_AllDuty_ChangeStep(void)
 	car data packet handle
 =========================================================*/
 
-void Car_DataPacket_Handle(void)
-{}
+void Car_DataPacket_Handle(Car_DataPacket_Rx_t dpr)
+{
+	int8_t temp;
+	
+	temp = dpr.rawData.flag + dpr.rawData.up_down + dpr.rawData.left_right;
+	// 接收错误
+	if (temp != dpr.check_Byte) {
+		printf("BLE rec data packet error!\r\n");
+		return;
+	}
+	// 接收正确
+}
 
 /*=========================================================
 	car initialization

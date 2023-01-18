@@ -40,11 +40,12 @@ extern Motor_t motors[4];
 
 /* Rx */
 typedef struct Car_DataPacket_Rx_RawData{
-	// bit4		->	low_AllDuty_ChangeStep
-	// bit3		->	up_AllDuty_ChangeStep
-	// bit2		->	low_AllDuty
-	// bit1		->	up_AllDuty
-	// bit0		->	isSetAction
+	// bit5		->	low_AllDuty_ChangeStep
+	// bit4		->	up_AllDuty_ChangeStep
+	// bit3		->	low_AllDuty
+	// bit2		->	up_AllDuty
+	// bit1		->	isSetAction
+	// bit0		->	isStop
 	int8_t flag;
 	int8_t up_down;
 	int8_t left_right;
@@ -71,8 +72,16 @@ typedef struct Car_DataPacket_Tx{
 	int8_t packet_Tail;
 }Car_DataPacket_Tx_t;
 
+/* car state machine ------------------------------------*/
+
+typedef struct{
+	;
+}Car_StateMachine_t;
+
 /* car functions ----------------------------------------*/
 
 void Car_Init(void);
+
+void Car_DataPacket_Handle(Car_DataPacket_Rx_t dpr);
 
 #endif /* __CAR_H */
