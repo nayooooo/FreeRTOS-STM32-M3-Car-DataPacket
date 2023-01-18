@@ -1,0 +1,78 @@
+#ifndef __CAR_H
+#define __CAR_H
+
+#include "sys.h"
+
+#include "motor.h"
+#include "ble.h"
+#include "timer.h"
+
+/* car motor pin micro ----------------------------------*/
+
+#define Motor11_A PBout(4)
+#define Motor11_B PBout(3)
+
+#define Motor12_A PAout(15)
+#define Motor12_B PAout(12)
+
+#define Motor21_A PAout(5)
+#define Motor21_B PAout(4)
+
+#define Motor22_A PAout(7)
+#define Motor22_B PAout(6)
+
+/* car motor duty micro ---------------------------------*/
+
+#define CAR_WHEELS_DUTY_MAX		(100)
+#define CAR_WHEELS_DUTY_MIN		(70)
+
+#define CAR_WHEELS_DUTY_CHANGE_STEP_MAX			(5)
+#define CAR_WHEELS_DUTY_CHANGE_STEP_MIN			(1)
+
+/* car motors -------------------------------------------*/
+
+extern Motor_t motors[4];
+
+/* car data packet --------------------------------------*/
+
+#define CAR_DATA_PACKET_HEAD_DEFAULT		(0XA5)
+#define CAR_DATA_PACKET_TAIL_DEFAULT		(0X5A)
+
+/* Rx */
+typedef struct Car_DataPacket_Rx_RawData{
+	// bit4		->	low_AllDuty_ChangeStep
+	// bit3		->	up_AllDuty_ChangeStep
+	// bit2		->	low_AllDuty
+	// bit1		->	up_AllDuty
+	// bit0		->	isSetAction
+	int8_t flag;
+	int8_t up_down;
+	int8_t left_right;
+}Car_DataPacket_Rx_RawData_t;
+typedef struct Car_DataPacket_Rx{
+	int8_t packet_Head;
+	Car_DataPacket_Rx_RawData_t rawData;
+	int8_t check_Byte;
+	int8_t packet_Tail;
+}Car_DataPacket_Rx_t;
+
+/* Tx */
+typedef struct Car_DataPacket_Tx_RawData{
+	int16_t w11_duty;
+	int16_t w12_duty;
+	int16_t w21_duty;
+	int16_t w22_duty;
+	int16_t allW_duty;
+}Car_DataPacket_Tx_RawData_t;
+typedef struct Car_DataPacket_Tx{
+	int8_t packet_Head;
+	Car_DataPacket_Tx_RawData_t rawData;
+	int8_t check_Byte;
+	int8_t packet_Tail;
+}Car_DataPacket_Tx_t;
+
+/* car functions ----------------------------------------*/
+
+void Car_Init(void);
+
+#endif /* __CAR_H */
