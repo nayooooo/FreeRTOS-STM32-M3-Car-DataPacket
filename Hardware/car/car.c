@@ -1,6 +1,7 @@
 #include "car.h"
 
 #include <stdio.h>
+#include <string.h>
 
 /*=========================================================
 	extern car action
@@ -217,6 +218,12 @@ static void Car_Low_AllDuty_ChangeStep(void)
 	car data packet decode and handle
 =========================================================*/
 
+// 小车状态机列表
+static Car_StateMachine_t Car_StateMachine_Table[] = {
+	{ CAR_BLE_STATEMACHINE_STOP, NULL },		// 小车停止
+	{ NULL, NULL },								// 状态机列表末尾
+};
+
 /**
  * @fn void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
  * @brief 从接收数据缓冲区中获取一包数据，并重置接收标志位USART3_RX_STA
@@ -229,7 +236,7 @@ void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 	
 	if (USART3_RX_STA&USART3_RX_STA_REC_END) {  // 接收完毕一包数据
 		// 定位包头
-		while (*pRxBuf != CAR_DATA_PACKET_HEAD_DEFAULT) pRxBuf++;
+		while (*pRxBuf != CAR_DATAPACKET_HEAD_DEFAULT) pRxBuf++;
 		dpr->packet_Head = *pRxBuf; pRxBuf++;
 		// 原始数据
 		dpr->rawData.flag = *pRxBuf; pRxBuf++;
@@ -238,8 +245,8 @@ void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 		// 校验和
 		dpr->check_Byte = *pRxBuf; pRxBuf++;
 		// 包尾数据
-		if (*pRxBuf == CAR_DATA_PACKET_TAIL_DEFAULT) dpr->packet_Tail = *pRxBuf;
-		else dpr->packet_Tail = CAR_DATA_PACKET_TAIL_ERROR;
+		if (*pRxBuf == CAR_DATAPACKET_TAIL_DEFAULT) dpr->packet_Tail = *pRxBuf;
+		else dpr->packet_Tail = CAR_DATAPACKET_TAIL_ERROR;
 		
 		// 重置接收标志位
 		USART3_RX_STA &= USART3_RX_STA_OVERFLOW;
@@ -247,14 +254,55 @@ void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 }
 
 /**
- * @fn static void Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
- * @brief 解码正确的接收数据包，并以  的形式返回解码信息
+ * @fn static Car_BLE_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
+ * @brief 解码正确的接收数据包，并以事件组结构体的形式返回解码信息
+ * @details 该函数不会检查接收数据包的正确性，请开发人员传入数据包之前检查一下
  *
- * @return []
+ * @return [Car_BLE_StateMachine_Event_Arr_t*] 小车事件列表及事件数目
  */
-static void Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
+static Car_BLE_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
 {
-	;
+	static Car_BLE_StateMachine_Event_Arr_t event;
+	int8_t ind = 0;
+	int8_t temp;
+	
+	// 初始化事件组
+	event.num = 0;
+	memset(event.events, 0, sizeof(event.events));
+	
+	// 解码
+	/* 标志位 */
+	for (temp = 0X01;\
+		temp <= CAR_DATAPACKET_RX_FLAG_LOW_ALLDUTY_CHANGESTEP; temp <<= 1) {
+		if (dpr.rawData.flag&temp) {
+			event.events[ind] = temp;
+			event.num++;
+			ind++;
+		}
+	}
+	/* 变量 */
+	/* up_down up为正 */
+	if (dpr.rawData.up_down > 0) {  // up
+		event.events[ind] = CAR_BLE_STATEMACHINE_TURNUP;
+		event.num++;
+		ind++;
+	} else if (dpr.rawData.up_down < 0) {  // down
+		event.events[ind] = CAR_BLE_STATEMACHINE_TURNDOWN;
+		event.num++;
+		ind++;
+	}  // up_down == 0 不计入事件组
+	/* left_right right为正 */
+	if (dpr.rawData.left_right > 0) {  // right
+		event.events[ind] = CAR_BLE_STATEMACHINE_TURNRIGHT;
+		event.num++;
+		ind++;
+	} else if (dpr.rawData.left_right < 0) {  // left
+		event.events[ind] = CAR_BLE_STATEMACHINE_TURNLEFT;
+		event.num++;
+		ind++;
+	}  // left_right == 0 不计入事件组
+	
+	return &event;
 }
 
 /**
@@ -264,6 +312,7 @@ static void Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
 void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr)
 {
 	uint8_t temp;
+	Car_BLE_StateMachine_Event_Arr_t *event;
 	
 	temp = dpr.rawData.flag + dpr.rawData.up_down + dpr.rawData.left_right;
 	// 接收数据错误
@@ -272,7 +321,7 @@ void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr)
 		return;
 	}
 	// 接收数据正确
-	Car_BLE_DataPacket_Rx_Decode(dpr);
+	event = Car_BLE_DataPacket_Rx_Decode(dpr);
 }
 
 /*=========================================================

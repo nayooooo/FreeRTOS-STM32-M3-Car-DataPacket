@@ -8,4 +8,5 @@
   ..\Hardware\mottor\motor.h ..\FWLIB\inc\stm32f10x_rcc.h \
   ..\FWLIB\inc\stm32f10x_gpio.h ..\Hardware\ble\ble.h \
   ..\System\usart\usart.h D:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdio.h \
-  ..\Periph\timer\timer.h
+  ..\Periph\timer\timer.h \
+  D:\Keil_v5\ARM\ARMCLANG\Bin\..\include\string.h

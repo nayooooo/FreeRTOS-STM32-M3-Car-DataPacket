@@ -35,10 +35,16 @@ extern Motor_t motors[4];
 
 /* car data packet --------------------------------------*/
 
-#define CAR_DATA_PACKET_HEAD_DEFAULT		(0XA5)
-#define CAR_DATA_PACKET_TAIL_DEFAULT		(0X5A)
-#define CAR_DATA_PACKET_TAIL_ERROR			(0X00)
+#define CAR_DATAPACKET_HEAD_DEFAULT		(0XA5)
+#define CAR_DATAPACKET_TAIL_DEFAULT		(0X5A)
+#define CAR_DATAPACKET_TAIL_ERROR		(0X00)
 
+#define CAR_DATAPACKET_RX_FLAG_ISSTOP					(0X01)
+#define CAR_DATAPACKET_RX_FLAG_ISSETACTION				(0X02)
+#define CAR_DATAPACKET_RX_FLAG_UP_ALLDUTY				(0X04)
+#define CAR_DATAPACKET_RX_FLAG_LOW_ALLDUTY				(0X08)
+#define CAR_DATAPACKET_RX_FLAG_UP_ALLDUTY_CHANGESTEP	(0X10)
+#define CAR_DATAPACKET_RX_FLAG_LOW_ALLDUTY_CHANGESTEP	(0X20)
 /* Rx */
 typedef struct Car_DataPacket_Rx_RawData{
 	// bit5		->	low_AllDuty_ChangeStep
@@ -76,10 +82,31 @@ typedef struct Car_DataPacket_Tx{
 
 /* car state machine ------------------------------------*/
 
+#define CAR_BLE_STATEMACHINE_FLAG_EVENT			(4)		// 标志位事件数目
+#define CAR_BLE_STATEMACHINE_VARI_EVENT			(2)		// 变量事件数目
+// 小车状态枚举
+typedef enum{
+	CAR_BLE_STATEMACHINE_STOP		= 1,			// 小车停止状态
+	CAR_BLE_STATEMACHINE_SETACTION,					// 小车设置动作
+	CAR_BLE_STATEMACHINE_UP_ALLDUTY,				// 增加小车所有车轮占空比
+	CAR_BLE_STATEMACHINE_LOW_ALLDUTY,				// 降低小车所有车轮占空比
+	CAR_BLE_STATEMACHINE_UP_ALLDUTY_CHANGESTEP,		// 增加小车所有车轮占空比变化步长
+	CAR_BLE_STATEMACHINE_LOW_ALLDUTY_CHANGESTEP,	// 降低小车所有车轮占空比变化步长
+	CAR_BLE_STATEMACHINE_TURNUP,					// 小车前进
+	CAR_BLE_STATEMACHINE_TURNDOWN,					// 小车后退
+	CAR_BLE_STATEMACHINE_TURNLEFT,					// 小车左转
+	CAR_BLE_STATEMACHINE_TURNRIGHT,					// 小车右转
+}Car_BLE_StateMachine_Event_Enum_t;
+typedef struct{
+	uint8_t num;			// 本次解码的事件数目
+	// 本次解码的事件列表
+	Car_BLE_StateMachine_Event_Enum_t events[\
+		CAR_BLE_STATEMACHINE_FLAG_EVENT + CAR_BLE_STATEMACHINE_VARI_EVENT];
+}Car_BLE_StateMachine_Event_Arr_t;
 typedef void(*Car_StateMachine_Action)(void);
 typedef struct{
-	;
-	Car_StateMachine_Action act;
+	Car_BLE_StateMachine_Event_Enum_t event;		// 小车事件
+	Car_StateMachine_Action act;					// 小车动作
 }Car_StateMachine_t;
 
 /* car functions ----------------------------------------*/
