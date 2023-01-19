@@ -545,9 +545,9 @@
               <FilePath>..\Hardware\car\motor.c</FilePath>
             </File>
             <File>
-              <FileName>car_ble.c</FileName>
+              <FileName>car_dp.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware\car\car_ble.c</FilePath>
+              <FilePath>..\Hardware\car\car_dp.c</FilePath>
             </File>
           </Files>
         </Group>
