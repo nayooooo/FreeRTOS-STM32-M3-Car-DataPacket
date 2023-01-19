@@ -217,6 +217,12 @@ static void Car_Low_AllDuty_ChangeStep(void)
 	car data packet decode
 =========================================================*/
 
+/**
+ * @fn void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
+ * @brief 从接收数据缓冲区中获取一包数据，并重置接收标志位USART3_RX_STA
+ *
+ * @param [Car_DataPacket_Rx_t] 一帧数据包指针
+ */
 void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 {
 	uint8_t *pRxBuf = USART3_RX_BUF;
@@ -238,6 +244,11 @@ void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 		// 重置接收标志位
 		USART3_RX_STA &= USART3_RX_STA_OVERFLOW;
 	}
+}
+
+void Car_BLE_DataPacket_Decode(Car_DataPacket_Rx_t dpr)
+{
+	;
 }
 
 /*=========================================================
