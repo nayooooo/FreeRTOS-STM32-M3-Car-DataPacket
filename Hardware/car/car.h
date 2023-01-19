@@ -46,7 +46,7 @@ typedef enum{
 	CAR_STATEMACHINE_TURNLEFT,					// 小车左转
 	CAR_STATEMACHINE_TURNRIGHT,					// 小车右转
 }Car_StateMachine_Event_Enum_t;
-typedef struct{
+typedef struct Car_StateMachine_Event_Arr{
 	uint8_t num;			// 本次解码的事件数目
 	// 本次解码的事件列表
 	Car_StateMachine_Event_Enum_t events[\

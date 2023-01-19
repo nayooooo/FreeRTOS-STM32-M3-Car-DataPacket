@@ -1,5 +1,5 @@
-#ifndef __CAR_BLE_H
-#define __CAR_BLE_H
+#ifndef __CAR_DP_H
+#define __CAR_DP_H
 
 #include "sys.h"
 
@@ -32,12 +32,12 @@ typedef struct Car_DataPacket_Rx{
 
 /* Tx */
 typedef struct Car_DataPacket_Tx_RawData{
-	int8_t allW_duty;
-	int8_t w11_duty;
-	int8_t w12_duty;
-	int8_t w21_duty;
-	int8_t w22_duty;
-	int8_t allW_duty_changeStep;
+	uint8_t allW_duty;
+	uint8_t w11_duty;
+	uint8_t w12_duty;
+	uint8_t w21_duty;
+	uint8_t w22_duty;
+	uint8_t allW_duty_changeStep;
 }Car_DataPacket_Tx_RawData_t;
 typedef struct Car_DataPacket_Tx{
 	int8_t packet_Head;
@@ -66,4 +66,4 @@ extern Car_DataPacket_Rx_t dpr[1];
 void Car_Get_DataPacket_Rx(void);
 void Car_Send_DataPacket_Tx(void);
 
-#endif /* __CAR_BLE_H */
+#endif /* __CAR_DP_H */

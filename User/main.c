@@ -74,6 +74,8 @@ void Car_Task(void *pvParameters)
 {
 	Car_Init();
 	
+	Car_Send_DataPacket_Tx();
+	
 	while(1)
 	{
 		if(USART3_RX_STA&USART3_RX_STA_REC_END) {  // 接收到了一包数据

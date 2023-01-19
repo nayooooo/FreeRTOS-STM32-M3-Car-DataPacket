@@ -55,7 +55,6 @@ extern uint16_t USART3_RX_STA;					//接收状态标记
 
 void USART3_Init(uint32_t bound);
 void USART3_Send_Char(uint8_t chr);
-void USART3_Send_Char_Int(int8_t Data);
 void USART3_Send_Num(uint16_t num);
 void USART3_Send_String(uint8_t *str);
 uint8_t USART3_Get_Char(uint16_t addr);

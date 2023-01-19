@@ -252,15 +252,6 @@ void USART3_Send_Char(uint8_t chr)
 	USART_SendData(USART3, chr);
 }
 
-void USART3_Send_Char_Int(int8_t Data)
-{
-  /* Check the parameters */
-  assert_param(IS_USART_DATA(Data)); 
-    
-  /* Transmit Data */
-  USART3->DR = Data;
-}
-
 void USART3_Send_Num(uint16_t num)
 {
 	uint8_t chr = 0;

@@ -298,7 +298,7 @@ static void Car_Set_Wheels_Dir_Duty(void)
 }
 
 /*=========================================================
-	car data packet decode and handle
+	car data packet Rx decode and handle
 =========================================================*/
 
 /**
