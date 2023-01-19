@@ -6,7 +6,7 @@
 #include "timer.h"
 #include "motor.h"
 #include "ble.h"
-#include "car_ble.h"
+#include "car_dp.h"
 
 /* car motor pin micro ----------------------------------*/
 
@@ -50,7 +50,7 @@ typedef struct{
 	uint8_t num;			// 本次解码的事件数目
 	// 本次解码的事件列表
 	Car_StateMachine_Event_Enum_t events[\
-		CAR_BLE_STATEMACHINE_FLAG_EVENT + CAR_BLE_STATEMACHINE_VARI_EVENT];
+		CAR_STATEMACHINE_FLAG_EVENT + CAR_STATEMACHINE_VARI_EVENT];
 }Car_StateMachine_Event_Arr_t;
 typedef void(*Car_StateMachine_Action)(void);
 typedef struct{

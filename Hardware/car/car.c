@@ -4,13 +4,6 @@
 #include <string.h>
 
 /*=========================================================
-	static car flag
-=========================================================*/
-
-// 接收数据包的标志位，在Car_BLE_Get_DataPacket_Rx中刷新
-uint8_t rxflag = CAR_DATAPACKET_RX_FLAG_NULL;
-
-/*=========================================================
 	static car state
 =========================================================*/
 
@@ -248,7 +241,7 @@ static void Car_Update_All_Wheel_Duty_Same(uint8_t duty)
  */
 static void Car_Move(void)
 {
-	if (!(rxflag&CAR_DATAPACKET_RX_FLAG_ISSTOP)) {
+	if (!(dpr[0].rawData.flag&CAR_DATAPACKET_RX_FLAG_ISSTOP)) {
 		Car_Update_All_Wheel_Duty();
 		// car move flag
 		BLE_Send_String((uint8_t*)"car has moving!");
@@ -263,7 +256,7 @@ static void Car_Move(void)
  */
 static void Car_Stop(void)
 {
-	if (rxflag&CAR_DATAPACKET_RX_FLAG_ISSTOP) {
+	if (dpr[0].rawData.flag&CAR_DATAPACKET_RX_FLAG_ISSTOP) {
 		Car_Update_All_Wheel_Duty_Same(0);
 		// car move flag
 		BLE_Send_String((uint8_t*)"car has stopped!");
@@ -379,10 +372,8 @@ void Car_DataPacket_Rx_Handle(void)
 	}
 	// 接收数据正确
 	event = Car_BLE_DataPacket_Rx_Decode(dpr[0]);  // 解码获取事件组
-	printf("\r\n");
-	printf("========================================\r\n");
+	// 回应状态机事件
 	for (i = 0; i < event->num; i++) {
-		printf("event: %d: %d\r\n", i, event->events[i]);
 		for (j = 0; Car_StateMachine_Table[j].event; j++) {  // 遍历状态机列表
 			if (event->events[i] == Car_StateMachine_Table[j].event) {
 				Car_StateMachine_Table[j].act();
@@ -390,8 +381,6 @@ void Car_DataPacket_Rx_Handle(void)
 			}
 		}
 	}
-	printf("========================================\r\n");
-	printf("\r\n");
 }
 
 /*=========================================================
