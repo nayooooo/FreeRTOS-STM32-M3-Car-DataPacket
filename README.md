@@ -30,15 +30,81 @@
 
 ![发送数据包](./picts/%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E5%8C%85.jpg)
 
-发送数据包的第一个字节是 `包头字节`，最后一个字节是 `包尾字节`，在包头字节和包尾字节中间有原始数据和校验和，校验和是原始数据相加后的低8位。
+发送数据包的第一个字节是 `包头字节`，最后一个字节是 `包尾字节`，在包头字节和包尾字节中间有 `原始数据` 和 `校验和`，校验和是原始数据相加后的低8位。
 
 ### 接收数据包解码 ###
+
+解码接收数据包有利于我们对上位机命令的执行。
 
 #### 验证数据包的完整性 ####
 
 我们首先得验证接收数据包是否正确，验证方法就是利用数据包中的校验和，如果校验和准确，则认为数据包正确。
 
 #### 解码数据包 ####
+
+接收数据包中的 `rawData` 结构体成员是我们关注的对象，以目前（2023-01-19）的接收数据包为例：
+
+    /* Rx */
+    typedef struct Car_DataPacket_Rx_RawData{
+        // bit5		->	low_AllDuty_ChangeStep
+        // bit4		->	up_AllDuty_ChangeStep
+        // bit3		->	low_AllDuty
+        // bit2		->	up_AllDuty
+        // bit1		->	isSetAction
+        // bit0		->	isStop
+        int8_t flag;
+        // up_down和left_right的取值域为[-100,100]
+        int8_t up_down;
+        int8_t left_right;
+    }Car_DataPacket_Rx_RawData_t;
+    typedef struct Car_DataPacket_Rx{
+        int8_t packet_Head;
+        Car_DataPacket_Rx_RawData_t rawData;
+        int8_t check_Byte;
+        int8_t packet_Tail;
+    }Car_DataPacket_Rx_t;
+
+原始数据部分包含有三个成员，分别是一个标志位变量和两个方向控制变量。
+
+##### 标志位变量flag #####
+
+`bit0    ->  isStop`
+
+isStop用于控制小车静止，当该标志位置位时，小车将无法移动，只有标志位清零时，小车才能移动。
+
+`bit1    ->  isSetAction`
+
+isSetAction用于设定小车的固定动作，当该标志位置位时，开始设定小车动作，当该标志位清零时，动作设定完毕。
+
+`bit2    ->  up_AllDuty`
+
+up_AllDuty用于增加所有车轮的占空比。
+
+`bit3	->	low_AllDuty`
+
+up_AllDuty用于降低所有车轮的占空比。
+
+`bit4	->	up_AllDuty_ChangeStep`
+
+up_AllDuty用于增加所有车轮的占空比变化步长。
+
+`bit5	->	low_AllDuty_ChangeStep`
+
+up_AllDuty用于降低所有车轮的占空比变化步长。
+
+##### 方向控制变量 #####
+
+`up_down`
+
+取值域为 `[-100,100]`，设定小车前进和后退两个方向的 `占空比权重`，在所有车轮中，存在着一个有所有车轮占空比和车轮最低占空比之差的一个 `占空比绝对位移` 的关系，我们使用占空比权重与它相乘，将得到该方向上的 `占空比相对位移`。
+
+`left_right`
+
+取值域为 `[-100,100]`，同上所述。
+
+##### 方向控制变量之间的冲突 #####
+
+当我们简单地去设定方向上的占空比时，会发现，前进和左转之间，车轮的转向是不同的，这时占空比的计算方法就需要一定的设计。
 
 #### 执行相应动作 ####
 

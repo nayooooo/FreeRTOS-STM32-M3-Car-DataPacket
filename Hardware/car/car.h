@@ -78,6 +78,7 @@ typedef struct Car_DataPacket_Tx{
 
 typedef void(*Car_StateMachine_Action)(void);
 typedef struct{
+	;
 	Car_StateMachine_Action act;
 }Car_StateMachine_t;
 

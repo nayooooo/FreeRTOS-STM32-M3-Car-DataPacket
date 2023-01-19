@@ -248,7 +248,9 @@ void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 
 /**
  * @fn static void Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
- * @brief 解码正确的接收数据包
+ * @brief 解码正确的接收数据包，并以  的形式返回解码信息
+ *
+ * @return []
  */
 static void Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
 {
