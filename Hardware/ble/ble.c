@@ -1,7 +1,5 @@
 #include "ble.h"
 
-#include "usart.h"
-
 void BLE_Init(void)
 {
 	USART3_Init(115200);

@@ -72,12 +72,24 @@ void Led_Flash_Task(void *pvParameters)
 // 小车任务
 void Car_Task(void *pvParameters)
 {
+	Car_DataPacket_Rx_t dpr = { 0 };
+	
 	Car_Init();
 	
 	while(1)
 	{
 		if(USART3_RX_STA&USART3_RX_STA_REC_END) {  // 接收到了一包数据
-			;
+			Car_BLE_Get_DataPacket_Rx(&dpr);
+			printf("\r\n");
+			printf("========================================\r\n");
+			printf("dpr->packet_Head:  %d\r\n", dpr.packet_Head);
+			printf("dpr->flag:         %d\r\n", dpr.rawData.flag);
+			printf("dpr->up_down:      %d\r\n", dpr.rawData.up_down);
+			printf("dpr->left_right:   %d\r\n", dpr.rawData.left_right);
+			printf("dpr->check_Byte:   %d\r\n", dpr.check_Byte);
+			printf("dpr->packet_Tail:  %d\r\n", dpr.packet_Tail);
+			printf("========================================\r\n");
+			printf("\r\n");
 		}
 		vTaskResume(LEDFlashTask_Handler);
 		vTaskDelay(1);

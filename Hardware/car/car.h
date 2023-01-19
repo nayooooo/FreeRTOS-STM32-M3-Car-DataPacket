@@ -37,6 +37,7 @@ extern Motor_t motors[4];
 
 #define CAR_DATA_PACKET_HEAD_DEFAULT		(0XA5)
 #define CAR_DATA_PACKET_TAIL_DEFAULT		(0X5A)
+#define CAR_DATA_PACKET_TAIL_ERROR			(0X00)
 
 /* Rx */
 typedef struct Car_DataPacket_Rx_RawData{
@@ -47,6 +48,7 @@ typedef struct Car_DataPacket_Rx_RawData{
 	// bit1		->	isSetAction
 	// bit0		->	isStop
 	int8_t flag;
+	// up_down和left_right的取值域为[-100,100]
 	int8_t up_down;
 	int8_t left_right;
 }Car_DataPacket_Rx_RawData_t;
@@ -83,6 +85,7 @@ typedef struct{
 
 void Car_Init(void);
 
+void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr);
 void Car_DataPacket_Handle(Car_DataPacket_Rx_t dpr);
 
 #endif /* __CAR_H */

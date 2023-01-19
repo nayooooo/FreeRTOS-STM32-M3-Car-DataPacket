@@ -214,6 +214,33 @@ static void Car_Low_AllDuty_ChangeStep(void)
 }
 
 /*=========================================================
+	car data packet decode
+=========================================================*/
+
+void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
+{
+	uint8_t *pRxBuf = USART3_RX_BUF;
+	
+	if (USART3_RX_STA&USART3_RX_STA_REC_END) {  // 接收完毕一包数据
+		// 定位包头
+		while (*pRxBuf != CAR_DATA_PACKET_HEAD_DEFAULT) pRxBuf++;
+		dpr->packet_Head = *pRxBuf; pRxBuf++;
+		// 原始数据
+		dpr->rawData.flag = *pRxBuf; pRxBuf++;
+		dpr->rawData.up_down = *pRxBuf; pRxBuf++;
+		dpr->rawData.left_right = *pRxBuf; pRxBuf++;
+		// 校验和
+		dpr->check_Byte = *pRxBuf; pRxBuf++;
+		// 包尾数据
+		if (*pRxBuf == CAR_DATA_PACKET_TAIL_DEFAULT) dpr->packet_Tail = *pRxBuf;
+		else dpr->packet_Tail = CAR_DATA_PACKET_TAIL_ERROR;
+		
+		// 重置接收标志位
+		USART3_RX_STA &= USART3_RX_STA_OVERFLOW;
+	}
+}
+
+/*=========================================================
 	car data packet handle
 =========================================================*/
 
