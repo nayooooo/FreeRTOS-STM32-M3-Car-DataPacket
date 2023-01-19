@@ -22,12 +22,13 @@ typedef struct Car_DataPacket_Rx_RawData{
 	// up_down和left_right的取值域为[-100,100]
 	int8_t up_down;
 	int8_t left_right;
+	int8_t rotate;
 }Car_DataPacket_Rx_RawData_t;
 typedef struct Car_DataPacket_Rx{
-	int8_t packet_Head;
+	uint8_t packet_Head;
 	Car_DataPacket_Rx_RawData_t rawData;
 	int8_t check_Byte;
-	int8_t packet_Tail;
+	uint8_t packet_Tail;
 }Car_DataPacket_Rx_t;
 
 /* Tx */
@@ -40,10 +41,10 @@ typedef struct Car_DataPacket_Tx_RawData{
 	uint8_t allW_duty_changeStep;
 }Car_DataPacket_Tx_RawData_t;
 typedef struct Car_DataPacket_Tx{
-	int8_t packet_Head;
+	uint8_t packet_Head;
 	Car_DataPacket_Tx_RawData_t rawData;
-	int8_t check_Byte;
-	int8_t packet_Tail;
+	uint8_t check_Byte;
+	uint8_t packet_Tail;
 }Car_DataPacket_Tx_t;
 
 /* 小车接收数据包FIFO */
@@ -59,7 +60,7 @@ extern Car_DataPacket_Rx_t dpr[1];
 /* car state machine ------------------------------------*/
 
 #define CAR_STATEMACHINE_FLAG_EVENT			(4)		// 标志位事件数目
-#define CAR_STATEMACHINE_VARI_EVENT			(2)		// 变量事件数目
+#define CAR_STATEMACHINE_VARI_EVENT			(3)		// 变量事件数目
 
 /* car functions ----------------------------------------*/
 

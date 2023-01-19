@@ -72,6 +72,7 @@ void Car_Get_DataPacket_Rx(void)
 		dpr[0].rawData.flag = *pRxBuf; pRxBuf++;
 		dpr[0].rawData.up_down = *pRxBuf; pRxBuf++;
 		dpr[0].rawData.left_right = *pRxBuf; pRxBuf++;
+		dpr[0].rawData.rotate = *pRxBuf; pRxBuf++;
 		// 校验和
 		dpr[0].check_Byte = *pRxBuf; pRxBuf++;
 		// 包尾数据

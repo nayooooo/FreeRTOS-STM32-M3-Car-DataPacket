@@ -15,6 +15,7 @@ uint8_t allW_duty_changeStep = CAR_WHEELS_DUTY_CHANGE_STEP_MIN;
 =========================================================*/
 
 static void Car_Set_Wheels_Dir_Duty(void);
+static void Car_Set_Rotate_dir(void);
 static void Car_Move(void);
 static void Car_Stop(void);
 static void Car_Up_AllWheel_Duty(void);
@@ -37,6 +38,8 @@ static Car_StateMachine_t Car_StateMachine_Table[] = {
 	{ CAR_STATEMACHINE_TURNDOWN, Car_Set_Wheels_Dir_Duty },						// 小车后退
 	{ CAR_STATEMACHINE_TURNLEFT, Car_Set_Wheels_Dir_Duty },						// 小车左转
 	{ CAR_STATEMACHINE_TURNRIGHT, Car_Set_Wheels_Dir_Duty },					// 小车右转
+	{ CAR_STATEMACHINE_ROTATRLEFT, Car_Set_Rotate_dir },						// 小车原地向左旋转
+	{ CAR_STATEMACHINE_ROTATRRIGHT, Car_Set_Rotate_dir },						// 小车原地向右旋转
 	{ CAR_STATEMACHINE_NULL, NULL },											// 状态机列表末尾
 };
 
@@ -265,6 +268,8 @@ static void Car_Stop(void)
  */
 static void Car_Set_Wheels_Dir_Duty(void)
 {
+	// bit3		->	右侧车轮占空比低于70
+	// bit2		->	左侧车轮占空比低于70
 	// bit1~0	->	up(10)	down(01)
 	uint8_t dirflag = 0X00;
 	int8_t temp;
@@ -273,6 +278,7 @@ static void Car_Set_Wheels_Dir_Duty(void)
 	// 判断移动方向up or down
 	if (dpr[0].rawData.up_down > 0) {  // up
 		dirflag |= 0X02;
+		temp = dpr[0].rawData.up_down;
 	} else if (dpr[0].rawData.up_down < 0) {  // down
 		dirflag |= 0X01;
 		// 求得绝对值
@@ -285,16 +291,49 @@ static void Car_Set_Wheels_Dir_Duty(void)
 	f2 = d1 - d2 + d1 * d2;
 	ld = CAR_WHEELS_DUTY_MIN + f1 * (allW_duty - CAR_WHEELS_DUTY_MIN);
 	rd = CAR_WHEELS_DUTY_MIN + f2 * (allW_duty - CAR_WHEELS_DUTY_MIN);
+	if (ld < CAR_WHEELS_DUTY_MIN) dirflag |= 0X04;
+	if (rd < CAR_WHEELS_DUTY_MIN) dirflag |= 0X08;
 	// 最终确定各个车轮的状态
+	wheels[0].duty = ld; wheels[1].duty = rd;
+	wheels[2].duty = ld; wheels[3].duty = rd;
 	if (dirflag&0X02) {  // up
 		Car_Wheels_Dir_Turn_Forward();
 	} else {  // down
 		Car_Wheels_Dir_Turn_Backward();
 	}
-	wheels[0].duty = ld; wheels[1].duty = rd;
-	wheels[2].duty = ld; wheels[3].duty = rd;
+	if (dirflag&0X04) {
+		Car_Wheels_Dir_TurnLeft();
+		wheels[0].duty = 2 * CAR_WHEELS_DUTY_MIN - ld;
+		wheels[2].duty = 2 * CAR_WHEELS_DUTY_MIN - ld;
+	} else if(dirflag&0X08) {
+		Car_Wheels_Dir_TurnRight();
+		wheels[1].duty = 2 * CAR_WHEELS_DUTY_MIN - rd;
+		wheels[3].duty = 2 * CAR_WHEELS_DUTY_MIN - rd;
+	}
 	// 各参数设定完成，开始更新车轮
 	Car_Move();  // 如果没有进入此函数，说明遥感是默认状态，不需要移动
+}
+
+static void Car_Set_Rotate_dir(void)
+{
+	int8_t temp;
+	
+	// 判断旋转方向
+	if (dpr[0].rawData.rotate > 0) {  // 原地向右旋转
+		Car_Wheels_Dir_TurnRight();
+		temp = dpr[0].rawData.rotate;
+	} else if (dpr[0].rawData.rotate < 0) {  // 原地向左旋转
+		Car_Wheels_Dir_TurnLeft();
+		// 得到绝对值
+		temp = dpr[0].rawData.rotate - 1;
+		temp = ~temp;
+	}
+	// 计算占空比
+	temp = CAR_WHEELS_DUTY_MIN + (int8_t)(1.0 * temp / 100 * (allW_duty - CAR_WHEELS_DUTY_MIN));
+	wheels[0].duty = temp; wheels[1].duty = temp;
+	wheels[2].duty = temp; wheels[3].duty = temp;
+	// 各参数设定完成，开始更新车轮
+	Car_Move();
 }
 
 /*=========================================================
@@ -312,7 +351,7 @@ static Car_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPacket
 {
 	static Car_StateMachine_Event_Arr_t event;
 	uint8_t i;
-	int8_t temp;
+	uint8_t temp;
 	
 	// 初始化事件组
 	event.num = 0;
@@ -358,6 +397,14 @@ static Car_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPacket
 		event.events[event.num] = CAR_STATEMACHINE_TURNLEFT;
 		event.num++;
 	}  // left_right == 0 不计入事件组
+	/* rotate */
+	if (dpr.rawData.rotate > 0) {  // 原地向右旋转
+		event.events[event.num] = CAR_STATEMACHINE_ROTATRRIGHT;
+		event.num++;
+	} else if (dpr.rawData.rotate < 0) {  // 原地向左旋转
+		event.events[event.num] = CAR_STATEMACHINE_ROTATRLEFT;
+		event.num++;
+	}
 	
 	return &event;
 }
@@ -372,7 +419,7 @@ void Car_DataPacket_Rx_Handle(void)
 	int8_t temp;
 	const Car_StateMachine_Event_Arr_t *event;
 	
-	temp = dpr[0].rawData.flag + dpr[0].rawData.up_down + dpr[0].rawData.left_right;
+	temp = dpr[0].rawData.flag + dpr[0].rawData.up_down + dpr[0].rawData.left_right + dpr[0].rawData.rotate;
 	// 接收数据错误
 	if ((dpr[0].packet_Tail == CAR_DATAPACKET_TAIL_ERROR) || (temp != dpr[0].check_Byte)) {
 		printf("Car BLE rec data packet error!\r\n");

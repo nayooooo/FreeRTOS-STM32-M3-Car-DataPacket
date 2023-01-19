@@ -45,6 +45,8 @@ typedef enum{
 	CAR_STATEMACHINE_TURNDOWN,					// 小车后退
 	CAR_STATEMACHINE_TURNLEFT,					// 小车左转
 	CAR_STATEMACHINE_TURNRIGHT,					// 小车右转
+	CAR_STATEMACHINE_ROTATRLEFT,				// 小车原地向左旋转
+	CAR_STATEMACHINE_ROTATRRIGHT,				// 小车原地向右旋转
 }Car_StateMachine_Event_Enum_t;
 typedef struct Car_StateMachine_Event_Arr{
 	uint8_t num;			// 本次解码的事件数目

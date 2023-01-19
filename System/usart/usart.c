@@ -353,7 +353,7 @@ void USART3_IRQHandler(void)                	// 串口3中断服务程序
 		if (!(USART3_RX_STA&USART3_RX_STA_REC_END)) {
 			if (car_DataPacket_Rx_Flag&0X08) {  // 接收到了包头数据
 				// 接收原始数据和校验和
-				if ((car_DataPacket_Rx_Flag&0X10) || ((car_DataPacket_Rx_Flag&0X07) == 4)) {  // 接收完成
+				if ((car_DataPacket_Rx_Flag&0X10) || ((car_DataPacket_Rx_Flag&0X07) == 5)) {  // 接收完成
 					car_DataPacket_Rx_Flag |= 0X10;
 					// 接收包尾数据
 					if (Res == 0X5A) {  // 接收到了包尾数据
