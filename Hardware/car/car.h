@@ -86,6 +86,6 @@ typedef struct{
 void Car_Init(void);
 
 void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr);
-void Car_DataPacket_Handle(Car_DataPacket_Rx_t dpr);
+void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr);
 
 #endif /* __CAR_H */

@@ -214,7 +214,7 @@ static void Car_Low_AllDuty_ChangeStep(void)
 }
 
 /*=========================================================
-	car data packet decode
+	car data packet decode and handle
 =========================================================*/
 
 /**
@@ -246,26 +246,31 @@ void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 	}
 }
 
-void Car_BLE_DataPacket_Decode(Car_DataPacket_Rx_t dpr)
+/**
+ * @fn static void Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
+ * @brief 解码正确的接收数据包
+ */
+static void Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
 {
 	;
 }
 
-/*=========================================================
-	car data packet handle
-=========================================================*/
-
-void Car_DataPacket_Handle(Car_DataPacket_Rx_t dpr)
+/**
+ * @fn void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr)
+ * @brief 接收数据包处理函数
+ */
+void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr)
 {
-	int8_t temp;
+	uint8_t temp;
 	
 	temp = dpr.rawData.flag + dpr.rawData.up_down + dpr.rawData.left_right;
-	// 接收错误
+	// 接收数据错误
 	if (temp != dpr.check_Byte) {
-		printf("BLE rec data packet error!\r\n");
+		printf("Car BLE rec data packet error!\r\n");
 		return;
 	}
-	// 接收正确
+	// 接收数据正确
+	Car_BLE_DataPacket_Rx_Decode(dpr);
 }
 
 /*=========================================================
