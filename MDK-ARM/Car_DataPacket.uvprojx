@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Core;..\FWLIB\inc;..\User;..\System\SYS;..\System\delay;..\System\usart;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\Periph\timer;..\Hardware\LED;..\Hardware\mottor;..\Hardware\car;..\Hardware\ble</IncludePath>
+              <IncludePath>..\Core;..\FWLIB\inc;..\User;..\System\SYS;..\System\delay;..\System\usart;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\Periph\timer;..\Hardware\LED;..\Hardware\car;..\Hardware\ble</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -530,11 +530,6 @@
               <FilePath>..\Hardware\LED\led.c</FilePath>
             </File>
             <File>
-              <FileName>motor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Hardware\mottor\motor.c</FilePath>
-            </File>
-            <File>
               <FileName>car.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Hardware\car\car.c</FilePath>
@@ -543,6 +538,16 @@
               <FileName>ble.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Hardware\ble\ble.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\car\motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>car_dp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\car\car_dp.c</FilePath>
             </File>
           </Files>
         </Group>

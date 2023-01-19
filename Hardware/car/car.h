@@ -3,9 +3,10 @@
 
 #include "sys.h"
 
+#include "timer.h"
 #include "motor.h"
 #include "ble.h"
-#include "timer.h"
+#include "car_dp.h"
 
 /* car motor pin micro ----------------------------------*/
 
@@ -29,50 +30,38 @@
 #define CAR_WHEELS_DUTY_CHANGE_STEP_MAX			(5)
 #define CAR_WHEELS_DUTY_CHANGE_STEP_MIN			(1)
 
-/* car motors -------------------------------------------*/
+/* car state machine ------------------------------------*/
 
-extern Motor_t motors[4];
-
-/* car data packet --------------------------------------*/
-
-#define CAR_DATA_PACKET_HEAD_DEFAULT		(0XA5)
-#define CAR_DATA_PACKET_TAIL_DEFAULT		(0X5A)
-
-/* Rx */
-typedef struct Car_DataPacket_Rx_RawData{
-	// bit4		->	low_AllDuty_ChangeStep
-	// bit3		->	up_AllDuty_ChangeStep
-	// bit2		->	low_AllDuty
-	// bit1		->	up_AllDuty
-	// bit0		->	isSetAction
-	int8_t flag;
-	int8_t up_down;
-	int8_t left_right;
-}Car_DataPacket_Rx_RawData_t;
-typedef struct Car_DataPacket_Rx{
-	int8_t packet_Head;
-	Car_DataPacket_Rx_RawData_t rawData;
-	int8_t check_Byte;
-	int8_t packet_Tail;
-}Car_DataPacket_Rx_t;
-
-/* Tx */
-typedef struct Car_DataPacket_Tx_RawData{
-	int16_t w11_duty;
-	int16_t w12_duty;
-	int16_t w21_duty;
-	int16_t w22_duty;
-	int16_t allW_duty;
-}Car_DataPacket_Tx_RawData_t;
-typedef struct Car_DataPacket_Tx{
-	int8_t packet_Head;
-	Car_DataPacket_Tx_RawData_t rawData;
-	int8_t check_Byte;
-	int8_t packet_Tail;
-}Car_DataPacket_Tx_t;
+// 小车事件枚举
+typedef enum{
+	CAR_STATEMACHINE_NULL,						// 小车无事件
+	CAR_STATEMACHINE_STOP,						// 小车停止
+	CAR_STATEMACHINE_SETACTION,					// 小车设置动作
+	CAR_STATEMACHINE_UP_ALLDUTY,				// 增加小车所有车轮占空比
+	CAR_STATEMACHINE_LOW_ALLDUTY,				// 降低小车所有车轮占空比
+	CAR_STATEMACHINE_UP_ALLDUTY_CHANGESTEP,		// 增加小车所有车轮占空比变化步长
+	CAR_STATEMACHINE_LOW_ALLDUTY_CHANGESTEP,	// 降低小车所有车轮占空比变化步长
+	CAR_STATEMACHINE_TURNUP,					// 小车前进
+	CAR_STATEMACHINE_TURNDOWN,					// 小车后退
+	CAR_STATEMACHINE_TURNLEFT,					// 小车左转
+	CAR_STATEMACHINE_TURNRIGHT,					// 小车右转
+}Car_StateMachine_Event_Enum_t;
+typedef struct{
+	uint8_t num;			// 本次解码的事件数目
+	// 本次解码的事件列表
+	Car_StateMachine_Event_Enum_t events[\
+		CAR_STATEMACHINE_FLAG_EVENT + CAR_STATEMACHINE_VARI_EVENT];
+}Car_StateMachine_Event_Arr_t;
+typedef void(*Car_StateMachine_Action)(void);
+typedef struct{
+	Car_StateMachine_Event_Enum_t event;		// 小车事件
+	Car_StateMachine_Action act;					// 小车动作
+}Car_StateMachine_t;
 
 /* car functions ----------------------------------------*/
 
 void Car_Init(void);
+
+void Car_DataPacket_Rx_Handle(void);
 
 #endif /* __CAR_H */

@@ -76,8 +76,20 @@ void Car_Task(void *pvParameters)
 	
 	while(1)
 	{
+//		Car_Send_DataPacket_Tx();
 		if(USART3_RX_STA&USART3_RX_STA_REC_END) {  // 接收到了一包数据
-			;
+			Car_Get_DataPacket_Rx();
+			printf("\r\n");
+			printf("========================================\r\n");
+			printf("dpr->packet_Head:  %d\r\n", dpr[0].packet_Head);
+			printf("dpr->flag:         %d\r\n", dpr[0].rawData.flag);
+			printf("dpr->up_down:      %d\r\n", dpr[0].rawData.up_down);
+			printf("dpr->left_right:   %d\r\n", dpr[0].rawData.left_right);
+			printf("dpr->check_Byte:   %d\r\n", dpr[0].check_Byte);
+			printf("dpr->packet_Tail:  %d\r\n", dpr[0].packet_Tail);
+			printf("========================================\r\n");
+			printf("\r\n");
+			Car_DataPacket_Rx_Handle();
 		}
 		vTaskResume(LEDFlashTask_Handler);
 		vTaskDelay(1);
