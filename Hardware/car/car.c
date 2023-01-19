@@ -4,19 +4,54 @@
 #include <string.h>
 
 /*=========================================================
+	static car flag
+=========================================================*/
+
+// 接收数据包的标志位，在Car_BLE_Get_DataPacket_Rx中刷新
+static uint8_t rxflag = CAR_DATAPACKET_RX_FLAG_NULL;
+
+/*=========================================================
+	static car state
+=========================================================*/
+
+static uint8_t allW_duty = CAR_WHEELS_DUTY_MIN;
+static uint8_t allW_duty_changeStep = CAR_WHEELS_DUTY_CHANGE_STEP_MIN;
+
+/*=========================================================
 	extern car action
 =========================================================*/
 
-static void Car_Wheels_Turn_Forward(void);
-static void Car_Wheels_Turn_Backward(void);
-static void Car_Wheels_TurnLeft(void);
-static void Car_Wheels_TurnRight(void);
+static void Car_Set_Wheels_Dir_Duty(void);
 static void Car_Move(void);
 static void Car_Stop(void);
-static void Car_Up_Update_AllWheel_Duty(void);
-static void Car_Low_Update_AllWheel_Duty(void);
+static void Car_Up_AllWheel_Duty(void);
+static void Car_Low_AllWheel_Duty(void);
 static void Car_Up_AllDuty_ChangeStep(void);
 static void Car_Low_AllDuty_ChangeStep(void);
+
+/*=========================================================
+	小车状态机列表
+=========================================================*/
+
+static Car_StateMachine_t Car_StateMachine_Table[] = {
+	{ CAR_STATEMACHINE_STOP, Car_Stop },										// 小车停止
+	{ CAR_STATEMACHINE_SETACTION, NULL },										// 小车设置动作
+	{ CAR_STATEMACHINE_UP_ALLDUTY, Car_Up_AllWheel_Duty },						// 增加小车所有车轮占空比
+	{ CAR_STATEMACHINE_LOW_ALLDUTY, Car_Low_AllWheel_Duty },					// 降低小车所有车轮占空比
+	{ CAR_STATEMACHINE_UP_ALLDUTY_CHANGESTEP, Car_Up_AllDuty_ChangeStep },		// 增加小车所有车轮占空比变化步长
+	{ CAR_STATEMACHINE_LOW_ALLDUTY_CHANGESTEP, Car_Low_AllDuty_ChangeStep },	// 降低小车所有车轮占空比变化步长
+	{ CAR_STATEMACHINE_TURNUP, Car_Set_Wheels_Dir_Duty },						// 小车前进
+	{ CAR_STATEMACHINE_TURNDOWN, Car_Set_Wheels_Dir_Duty },						// 小车后退
+	{ CAR_STATEMACHINE_TURNLEFT, Car_Set_Wheels_Dir_Duty },						// 小车左转
+	{ CAR_STATEMACHINE_TURNRIGHT, Car_Set_Wheels_Dir_Duty },					// 小车右转
+	{ CAR_STATEMACHINE_NULL, NULL },											// 状态机列表末尾
+};
+
+/*=========================================================
+	小车接收数据包FIFO
+=========================================================*/
+
+Car_DataPacket_Rx_t dpr[1];
 
 /*=========================================================
 	car wheels
@@ -82,10 +117,10 @@ Motor_t wheels[4] = {
 =========================================================*/
 
 /**
- * @fn static void Car_Wheels_Turn_Forward(void)
+ * @fn static void Car_Wheels_Dir_Turn_Forward(void)
  * @brief 车轮方向变成前进
  */
-static void Car_Wheels_Turn_Forward(void)
+static void Car_Wheels_Dir_Turn_Forward(void)
 {
 	wheels[0].Set_Dir(&wheels[0], Motor_Rotate_Dir_Forward);  // wheel11
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Forward);  // wheel12
@@ -95,10 +130,10 @@ static void Car_Wheels_Turn_Forward(void)
 }
 
 /**
- * @fn static void Car_Wheels_Turn_Backward(void)
+ * @fn static void Car_Wheels_Dir_Turn_Backward(void)
  * @brief 车轮方向变成后退
  */
-static void Car_Wheels_Turn_Backward(void)
+static void Car_Wheels_Dir_Turn_Backward(void)
 {
 	wheels[0].Set_Dir(&wheels[0], Motor_Rotate_Dir_Reverse);
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Reverse);
@@ -108,10 +143,10 @@ static void Car_Wheels_Turn_Backward(void)
 }
 
 /**
- * @fn static void Car_Wheels_TurnLeft(void)
+ * @fn static void Car_Wheels_Dir_TurnLeft(void)
  * @brief 车轮方向变成左转
  */
-static void Car_Wheels_TurnLeft(void)
+static void Car_Wheels_Dir_TurnLeft(void)
 {
 	wheels[0].Set_Dir(&wheels[0], Motor_Rotate_Dir_Reverse);
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Forward);
@@ -121,10 +156,10 @@ static void Car_Wheels_TurnLeft(void)
 }
 
 /**
- * @fn static void Car_Wheels_TurnRight(void)
+ * @fn static void Car_Wheels_Dir_TurnRight(void)
  * @brief 车轮方向变成右转
  */
-static void Car_Wheels_TurnRight(void)
+static void Car_Wheels_Dir_TurnRight(void)
 {
 	wheels[0].Set_Dir(&wheels[0], Motor_Rotate_Dir_Forward);
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Reverse);
@@ -134,10 +169,25 @@ static void Car_Wheels_TurnRight(void)
 }
 
 /**
- * @fn static void Car_Update_All_Wheel_Duty(uint8_t duty)
- * @brief 更新所有车轮的占空比
+ * @fn static void (void)
+ * @brief 确定小车各个车轮的方向和占空比
  */
-static void Car_Update_All_Wheel_Duty(uint8_t duty)
+static void Car_Set_Wheels_Dir_Duty(void)
+{
+	// 判断移动方向
+	if (dpr[0].rawData.up_down > 0) {  // up
+	} else if (dpr[0].rawData.up_down < 0) {  // down
+	}
+	// 各参数设定完成，开始更新车轮
+	// 如果没有进入此函数，说明遥感是默认状态，不需要移动
+	Car_Move();
+}
+
+/**
+ * @fn static void Car_Update_All_Wheel_Duty_Same(uint8_t duty)
+ * @brief 更新所有车轮的占空比（占空比一致）
+ */
+static void Car_Update_All_Wheel_Duty_Same(uint8_t duty)
 {
 	wheels[0].duty = duty;
 	wheels[1].duty = duty;
@@ -150,14 +200,30 @@ static void Car_Update_All_Wheel_Duty(uint8_t duty)
 }
 
 /**
+ * @fn static void Car_Update_All_Wheel_Duty(void)
+ * @brief 更新所有车轮的占空比
+ */
+static void Car_Update_All_Wheel_Duty(void)
+{
+	wheels[0].Update_Duty(&wheels[0]);
+	wheels[1].Update_Duty(&wheels[1]);
+	wheels[2].Update_Duty(&wheels[2]);
+	wheels[3].Update_Duty(&wheels[3]);
+}
+
+/**
  * @fn static void Car_Move(void)
  * @brief 车开始移动
  */
 static void Car_Move(void)
 {
-	Car_Update_All_Wheel_Duty(0);
-	// car move flag
-	BLE_Send_String((uint8_t*)"car is moving!");
+	if (!(rxflag&CAR_DATAPACKET_RX_FLAG_ISSTOP)) {
+		Car_Update_All_Wheel_Duty_Same(allW_duty);
+		// car move flag
+		BLE_Send_String((uint8_t*)"car has moving!");
+	} else {
+		BLE_Send_String((uint8_t*)"Don't move it!\r\n");
+	}
 }
 
 /**
@@ -166,30 +232,38 @@ static void Car_Move(void)
  */
 static void Car_Stop(void)
 {
-	Car_Update_All_Wheel_Duty(0);
-	// car move flag
-	BLE_Send_String((uint8_t*)"car has stopped!");
+	if (rxflag&CAR_DATAPACKET_RX_FLAG_ISSTOP) {
+		Car_Update_All_Wheel_Duty_Same(0);
+		// car move flag
+		BLE_Send_String((uint8_t*)"car has stopped!");
+	}
 }
 
 /**
- * @fn static void Car_Up_Update_AllWheel_Duty(void)
- * @brief 提升并更新所有车轮的占空比，如果车停止，将只提升所有车轮的占空比
+ * @fn static void Car_Up_AllWheel_Duty(void)
+ * @brief 提升所有车轮的占空比
  */
-static void Car_Up_Update_AllWheel_Duty(void)
+static void Car_Up_AllWheel_Duty(void)
 {
-	;
-	BLE_Send_String((uint8_t*)"wheels' duty is: ");
-	BLE_Send_Num(1);
+	allW_duty += allW_duty_changeStep;
+	if ((allW_duty > CAR_WHEELS_DUTY_MAX) ||\
+		(allW_duty < CAR_WHEELS_DUTY_MIN))
+		allW_duty -= allW_duty_changeStep;
+	BLE_Send_String((uint8_t*)"all wheels' duty is: ");
+	BLE_Send_Num(allW_duty);
 }
 /**
- * @fn static void Car_Low_Update_AllWheel_Duty(void)
- * @brief 降低并更新所有车轮的占空比，如果车停止，将只降低所有车轮的占空比
+ * @fn static void Car_Low_AllWheel_Duty(void)
+ * @brief 降低所有车轮的占空比
  */
-static void Car_Low_Update_AllWheel_Duty(void)
+static void Car_Low_AllWheel_Duty(void)
 {
-	;
-	BLE_Send_String((uint8_t*)"wheels' duty is: ");
-	BLE_Send_Num(1);
+	allW_duty -= allW_duty_changeStep;
+	if ((allW_duty > CAR_WHEELS_DUTY_MAX) ||\
+		(allW_duty < CAR_WHEELS_DUTY_MIN))
+		allW_duty += allW_duty_changeStep;
+	BLE_Send_String((uint8_t*)"all wheels' duty is: ");
+	BLE_Send_Num(allW_duty);
 }
 
 /**
@@ -198,9 +272,12 @@ static void Car_Low_Update_AllWheel_Duty(void)
  */
 static void Car_Up_AllDuty_ChangeStep(void)
 {
-	;
-	BLE_Send_String((uint8_t*)"wheels' duty change step is: ");
-	BLE_Send_Num(1);
+	allW_duty_changeStep++;
+	if ((allW_duty_changeStep > CAR_WHEELS_DUTY_CHANGE_STEP_MAX) ||\
+		(allW_duty_changeStep < CAR_WHEELS_DUTY_CHANGE_STEP_MIN))
+		allW_duty_changeStep--;
+	BLE_Send_String((uint8_t*)"all wheels' duty change step is: ");
+	BLE_Send_Num(allW_duty_changeStep);
 }
 
 /**
@@ -209,44 +286,40 @@ static void Car_Up_AllDuty_ChangeStep(void)
  */
 static void Car_Low_AllDuty_ChangeStep(void)
 {
-	;
-	BLE_Send_String((uint8_t*)"wheels' duty change step is: ");
-	BLE_Send_Num(1);
+	allW_duty_changeStep--;
+	if ((allW_duty_changeStep > CAR_WHEELS_DUTY_CHANGE_STEP_MAX) ||\
+		(allW_duty_changeStep < CAR_WHEELS_DUTY_CHANGE_STEP_MIN))
+		allW_duty_changeStep++;
+	BLE_Send_String((uint8_t*)"all wheels' duty change step is: ");
+	BLE_Send_Num(allW_duty_changeStep);
 }
 
 /*=========================================================
 	car data packet decode and handle
 =========================================================*/
 
-// 小车状态机列表
-static Car_StateMachine_t Car_StateMachine_Table[] = {
-	{ CAR_BLE_STATEMACHINE_STOP, NULL },		// 小车停止
-	{ NULL, NULL },								// 状态机列表末尾
-};
-
 /**
- * @fn void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
+ * @fn void Car_BLE_Get_DataPacket_Rx(void)
  * @brief 从接收数据缓冲区中获取一包数据，并重置接收标志位USART3_RX_STA
- *
- * @param [Car_DataPacket_Rx_t] 一帧数据包指针
  */
-void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
+void Car_BLE_Get_DataPacket_Rx(void)
 {
 	uint8_t *pRxBuf = USART3_RX_BUF;
 	
 	if (USART3_RX_STA&USART3_RX_STA_REC_END) {  // 接收完毕一包数据
 		// 定位包头
 		while (*pRxBuf != CAR_DATAPACKET_HEAD_DEFAULT) pRxBuf++;
-		dpr->packet_Head = *pRxBuf; pRxBuf++;
+		dpr[0].packet_Head = *pRxBuf; pRxBuf++;
 		// 原始数据
-		dpr->rawData.flag = *pRxBuf; pRxBuf++;
-		dpr->rawData.up_down = *pRxBuf; pRxBuf++;
-		dpr->rawData.left_right = *pRxBuf; pRxBuf++;
+		rxflag = *pRxBuf;
+		dpr[0].rawData.flag = *pRxBuf; pRxBuf++;
+		dpr[0].rawData.up_down = *pRxBuf; pRxBuf++;
+		dpr[0].rawData.left_right = *pRxBuf; pRxBuf++;
 		// 校验和
-		dpr->check_Byte = *pRxBuf; pRxBuf++;
+		dpr[0].check_Byte = *pRxBuf; pRxBuf++;
 		// 包尾数据
-		if (*pRxBuf == CAR_DATAPACKET_TAIL_DEFAULT) dpr->packet_Tail = *pRxBuf;
-		else dpr->packet_Tail = CAR_DATAPACKET_TAIL_ERROR;
+		if (*pRxBuf == CAR_DATAPACKET_TAIL_DEFAULT) dpr[0].packet_Tail = *pRxBuf;
+		else dpr[0].packet_Tail = CAR_DATAPACKET_TAIL_ERROR;
 		
 		// 重置接收标志位
 		USART3_RX_STA &= USART3_RX_STA_OVERFLOW;
@@ -255,7 +328,7 @@ void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr)
 
 /**
  * @fn static Car_BLE_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPacket_Rx_t dpr)
- * @brief 解码正确的接收数据包，并以事件组结构体的形式返回解码信息
+ * @brief 解码一帧正确的接收数据包，并以事件组结构体的形式返回解码信息
  * @details 该函数不会检查接收数据包的正确性，请开发人员传入数据包之前检查一下
  *
  * @return [Car_BLE_StateMachine_Event_Arr_t*] 小车事件列表及事件数目
@@ -283,21 +356,21 @@ static Car_BLE_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPa
 	/* 变量 */
 	/* up_down up为正 */
 	if (dpr.rawData.up_down > 0) {  // up
-		event.events[ind] = CAR_BLE_STATEMACHINE_TURNUP;
+		event.events[ind] = CAR_STATEMACHINE_TURNUP;
 		event.num++;
 		ind++;
 	} else if (dpr.rawData.up_down < 0) {  // down
-		event.events[ind] = CAR_BLE_STATEMACHINE_TURNDOWN;
+		event.events[ind] = CAR_STATEMACHINE_TURNDOWN;
 		event.num++;
 		ind++;
 	}  // up_down == 0 不计入事件组
 	/* left_right right为正 */
 	if (dpr.rawData.left_right > 0) {  // right
-		event.events[ind] = CAR_BLE_STATEMACHINE_TURNRIGHT;
+		event.events[ind] = CAR_STATEMACHINE_TURNRIGHT;
 		event.num++;
 		ind++;
 	} else if (dpr.rawData.left_right < 0) {  // left
-		event.events[ind] = CAR_BLE_STATEMACHINE_TURNLEFT;
+		event.events[ind] = CAR_STATEMACHINE_TURNLEFT;
 		event.num++;
 		ind++;
 	}  // left_right == 0 不计入事件组
@@ -306,22 +379,29 @@ static Car_BLE_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPa
 }
 
 /**
- * @fn void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr)
+ * @fn void Car_DataPacket_Rx_Handle(void)
  * @brief 接收数据包处理函数
  */
-void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr)
+void Car_DataPacket_Rx_Handle(void)
 {
+	uint8_t i, j;
 	uint8_t temp;
 	Car_BLE_StateMachine_Event_Arr_t *event;
 	
-	temp = dpr.rawData.flag + dpr.rawData.up_down + dpr.rawData.left_right;
+	temp = dpr[0].rawData.flag + dpr[0].rawData.up_down + dpr[0].rawData.left_right;
 	// 接收数据错误
-	if (temp != dpr.check_Byte) {
+	if ((dpr[0].packet_Tail == CAR_DATAPACKET_TAIL_ERROR) || (temp != dpr[0].check_Byte)) {
 		printf("Car BLE rec data packet error!\r\n");
 		return;
 	}
 	// 接收数据正确
-	event = Car_BLE_DataPacket_Rx_Decode(dpr);
+	event = Car_BLE_DataPacket_Rx_Decode(dpr[0]);  // 解码获取事件组
+	for (i = 0; i < event->num; i++) {
+		for (j = 0; Car_StateMachine_Table[j].event; j++) {  // 遍历状态机列表
+			if (event->events[i] == Car_StateMachine_Table[j].event)
+				Car_StateMachine_Table[j].act();
+		}
+	}
 }
 
 /*=========================================================
@@ -363,7 +443,7 @@ void Car_Init(void)
 	Car_Wheels_Pwm_Init();
 	
 	Car_Stop();
-	Car_Wheels_Turn_Forward();
+	Car_Wheels_Dir_Turn_Forward();
 	
 	printf("\r\n");
 	printf("***************************************************\r\n");

@@ -39,6 +39,7 @@ extern Motor_t motors[4];
 #define CAR_DATAPACKET_TAIL_DEFAULT		(0X5A)
 #define CAR_DATAPACKET_TAIL_ERROR		(0X00)
 
+#define CAR_DATAPACKET_RX_FLAG_NULL						(0X00)
 #define CAR_DATAPACKET_RX_FLAG_ISSTOP					(0X01)
 #define CAR_DATAPACKET_RX_FLAG_ISSETACTION				(0X02)
 #define CAR_DATAPACKET_RX_FLAG_UP_ALLDUTY				(0X04)
@@ -80,22 +81,27 @@ typedef struct Car_DataPacket_Tx{
 	int8_t packet_Tail;
 }Car_DataPacket_Tx_t;
 
+/* 小车接收数据包FIFO */
+
+extern Car_DataPacket_Rx_t dpr[1];
+
 /* car state machine ------------------------------------*/
 
 #define CAR_BLE_STATEMACHINE_FLAG_EVENT			(4)		// 标志位事件数目
 #define CAR_BLE_STATEMACHINE_VARI_EVENT			(2)		// 变量事件数目
 // 小车状态枚举
 typedef enum{
-	CAR_BLE_STATEMACHINE_STOP		= 1,			// 小车停止状态
-	CAR_BLE_STATEMACHINE_SETACTION,					// 小车设置动作
-	CAR_BLE_STATEMACHINE_UP_ALLDUTY,				// 增加小车所有车轮占空比
-	CAR_BLE_STATEMACHINE_LOW_ALLDUTY,				// 降低小车所有车轮占空比
-	CAR_BLE_STATEMACHINE_UP_ALLDUTY_CHANGESTEP,		// 增加小车所有车轮占空比变化步长
-	CAR_BLE_STATEMACHINE_LOW_ALLDUTY_CHANGESTEP,	// 降低小车所有车轮占空比变化步长
-	CAR_BLE_STATEMACHINE_TURNUP,					// 小车前进
-	CAR_BLE_STATEMACHINE_TURNDOWN,					// 小车后退
-	CAR_BLE_STATEMACHINE_TURNLEFT,					// 小车左转
-	CAR_BLE_STATEMACHINE_TURNRIGHT,					// 小车右转
+	CAR_STATEMACHINE_NULL,						// 小车无状态
+	CAR_STATEMACHINE_STOP,						// 小车停止状态
+	CAR_STATEMACHINE_SETACTION,					// 小车设置动作
+	CAR_STATEMACHINE_UP_ALLDUTY,				// 增加小车所有车轮占空比
+	CAR_STATEMACHINE_LOW_ALLDUTY,				// 降低小车所有车轮占空比
+	CAR_STATEMACHINE_UP_ALLDUTY_CHANGESTEP,		// 增加小车所有车轮占空比变化步长
+	CAR_STATEMACHINE_LOW_ALLDUTY_CHANGESTEP,	// 降低小车所有车轮占空比变化步长
+	CAR_STATEMACHINE_TURNUP,					// 小车前进
+	CAR_STATEMACHINE_TURNDOWN,					// 小车后退
+	CAR_STATEMACHINE_TURNLEFT,					// 小车左转
+	CAR_STATEMACHINE_TURNRIGHT,					// 小车右转
 }Car_BLE_StateMachine_Event_Enum_t;
 typedef struct{
 	uint8_t num;			// 本次解码的事件数目
@@ -113,7 +119,7 @@ typedef struct{
 
 void Car_Init(void);
 
-void Car_BLE_Get_DataPacket_Rx(Car_DataPacket_Rx_t *dpr);
-void Car_DataPacket_Rx_Handle(Car_DataPacket_Rx_t dpr);
+void Car_BLE_Get_DataPacket_Rx(void);
+void Car_DataPacket_Rx_Handle(void);
 
 #endif /* __CAR_H */
