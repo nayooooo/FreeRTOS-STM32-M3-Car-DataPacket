@@ -43,14 +43,14 @@ void Car_Send_DataPacket_Tx(void)
 		dpt.rawData.allW_duty_changeStep;
 	dpt.packet_Tail = CAR_DATAPACKET_TAIL_DEFAULT;
 	
-	BLE_Send_Char(dpt.packet_Head);
-	BLE_Send_Char(dpt.rawData.w11_duty);
-	BLE_Send_Char(dpt.rawData.w12_duty);
-	BLE_Send_Char(dpt.rawData.w21_duty);
-	BLE_Send_Char(dpt.rawData.w22_duty);
-	BLE_Send_Char(dpt.rawData.allW_duty_changeStep);
-	BLE_Send_Char(dpt.check_Byte);
-	BLE_Send_Char(dpt.packet_Tail);
+	USART3_Send_Char_Int(dpt.packet_Head);
+	USART3_Send_Char_Int(dpt.rawData.w11_duty);
+	USART3_Send_Char_Int(dpt.rawData.w12_duty);
+	USART3_Send_Char_Int(dpt.rawData.w21_duty);
+	USART3_Send_Char_Int(dpt.rawData.w22_duty);
+	USART3_Send_Char_Int(dpt.rawData.allW_duty_changeStep);
+	USART3_Send_Char_Int(dpt.check_Byte);
+	USART3_Send_Char_Int(dpt.packet_Tail);
 }
 
 /**

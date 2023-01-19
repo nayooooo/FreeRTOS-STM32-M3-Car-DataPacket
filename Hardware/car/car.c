@@ -113,7 +113,7 @@ static void Car_Wheels_Dir_Turn_Forward(void)
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Forward);  // wheel12
 	wheels[2].Set_Dir(&wheels[2], Motor_Rotate_Dir_Forward);  // wheel21
 	wheels[3].Set_Dir(&wheels[3], Motor_Rotate_Dir_Forward);  // wheel22
-	BLE_Send_String((uint8_t*)"turn forward");
+	printf("turn forward\r\n");
 }
 
 /**
@@ -126,7 +126,7 @@ static void Car_Wheels_Dir_Turn_Backward(void)
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Reverse);
 	wheels[2].Set_Dir(&wheels[2], Motor_Rotate_Dir_Reverse);
 	wheels[3].Set_Dir(&wheels[3], Motor_Rotate_Dir_Reverse);
-	BLE_Send_String((uint8_t*)"turn backward");
+	printf("turn backward\r\n");
 }
 
 /**
@@ -139,7 +139,7 @@ static void Car_Wheels_Dir_TurnLeft(void)
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Forward);
 	wheels[2].Set_Dir(&wheels[2], Motor_Rotate_Dir_Reverse);
 	wheels[3].Set_Dir(&wheels[3], Motor_Rotate_Dir_Forward);
-	BLE_Send_String((uint8_t*)"turn left");
+	printf("turn left\r\n");
 }
 
 /**
@@ -152,7 +152,7 @@ static void Car_Wheels_Dir_TurnRight(void)
 	wheels[1].Set_Dir(&wheels[1], Motor_Rotate_Dir_Reverse);
 	wheels[2].Set_Dir(&wheels[2], Motor_Rotate_Dir_Forward);
 	wheels[3].Set_Dir(&wheels[3], Motor_Rotate_Dir_Reverse);
-	BLE_Send_String((uint8_t*)"turn right");
+	printf("turn right\r\n");
 }
 
 /**
@@ -165,8 +165,7 @@ static void Car_Up_AllWheel_Duty(void)
 	if ((allW_duty > CAR_WHEELS_DUTY_MAX) ||\
 		(allW_duty < CAR_WHEELS_DUTY_MIN))
 		allW_duty -= allW_duty_changeStep;
-	BLE_Send_String((uint8_t*)"all wheels' duty is: ");
-	BLE_Send_Num(allW_duty);
+	printf("all wheels' duty is: %d\r\n", allW_duty);
 }
 /**
  * @fn static void Car_Low_AllWheel_Duty(void)
@@ -178,8 +177,7 @@ static void Car_Low_AllWheel_Duty(void)
 	if ((allW_duty > CAR_WHEELS_DUTY_MAX) ||\
 		(allW_duty < CAR_WHEELS_DUTY_MIN))
 		allW_duty += allW_duty_changeStep;
-	BLE_Send_String((uint8_t*)"all wheels' duty is: ");
-	BLE_Send_Num(allW_duty);
+	printf("all wheels' duty is: %d\r\n", allW_duty);
 }
 
 /**
@@ -192,8 +190,7 @@ static void Car_Up_AllDuty_ChangeStep(void)
 	if ((allW_duty_changeStep > CAR_WHEELS_DUTY_CHANGE_STEP_MAX) ||\
 		(allW_duty_changeStep < CAR_WHEELS_DUTY_CHANGE_STEP_MIN))
 		allW_duty_changeStep--;
-	BLE_Send_String((uint8_t*)"all wheels' duty change step is: ");
-	BLE_Send_Num(allW_duty_changeStep);
+	printf("all wheels' duty change step is: %d\r\n", allW_duty_changeStep);
 }
 
 /**
@@ -206,8 +203,7 @@ static void Car_Low_AllDuty_ChangeStep(void)
 	if ((allW_duty_changeStep > CAR_WHEELS_DUTY_CHANGE_STEP_MAX) ||\
 		(allW_duty_changeStep < CAR_WHEELS_DUTY_CHANGE_STEP_MIN))
 		allW_duty_changeStep++;
-	BLE_Send_String((uint8_t*)"all wheels' duty change step is: ");
-	BLE_Send_Num(allW_duty_changeStep);
+	printf("all wheels' duty change step is: %d\r\n", allW_duty_changeStep);
 }
 
 /**
@@ -244,9 +240,9 @@ static void Car_Move(void)
 	if (!(dpr[0].rawData.flag&CAR_DATAPACKET_RX_FLAG_ISSTOP)) {
 		Car_Update_All_Wheel_Duty();
 		// car move flag
-		BLE_Send_String((uint8_t*)"car has moving!");
+		printf("car has moving!\r\n");
 	} else {
-		BLE_Send_String((uint8_t*)"Don't move it!\r\n");
+		printf("Don't move it!\r\n");
 	}
 }
 
@@ -259,7 +255,7 @@ static void Car_Stop(void)
 	if (dpr[0].rawData.flag&CAR_DATAPACKET_RX_FLAG_ISSTOP) {
 		Car_Update_All_Wheel_Duty_Same(0);
 		// car move flag
-		BLE_Send_String((uint8_t*)"car has stopped!");
+		printf("car has stopped!\r\n");
 	}
 }
 
@@ -341,7 +337,19 @@ static Car_StateMachine_Event_Arr_t *Car_BLE_DataPacket_Rx_Decode(Car_DataPacket
 	} else if (dpr.rawData.up_down < 0) {  // down
 		event.events[event.num] = CAR_STATEMACHINE_TURNDOWN;
 		event.num++;
-	}  // up_down == 0 不计入事件组
+	} else {  // 停止  // 无作用，以后再研究
+		temp = 0;
+		for (i = 0; event.events[i]; i++) {
+			if (event.events[i] == CAR_DATAPACKET_RX_FLAG_ISSTOP) {
+				temp = 1;
+				break;
+			}
+		}
+		if (temp) {
+			event.events[event.num] = CAR_DATAPACKET_RX_FLAG_ISSTOP;
+			event.num++;
+		}
+	}
 	/* left_right right为正 */
 	if (dpr.rawData.left_right > 0) {  // right
 		event.events[event.num] = CAR_STATEMACHINE_TURNRIGHT;
