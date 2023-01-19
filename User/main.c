@@ -76,6 +76,7 @@ void Car_Task(void *pvParameters)
 	
 	while(1)
 	{
+//		Car_BLE_Send_DataPacket_Tx();
 		if(USART3_RX_STA&USART3_RX_STA_REC_END) {  // 接收到了一包数据
 			Car_BLE_Get_DataPacket_Rx();
 			printf("\r\n");
@@ -88,6 +89,7 @@ void Car_Task(void *pvParameters)
 			printf("dpr->packet_Tail:  %d\r\n", dpr[0].packet_Tail);
 			printf("========================================\r\n");
 			printf("\r\n");
+			Car_DataPacket_Rx_Handle();
 		}
 		vTaskResume(LEDFlashTask_Handler);
 		vTaskDelay(1);

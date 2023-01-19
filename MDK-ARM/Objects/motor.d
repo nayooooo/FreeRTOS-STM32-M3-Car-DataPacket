@@ -1,4 +1,4 @@
-./objects/motor.o: ..\Hardware\mottor\motor.c ..\Hardware\mottor\motor.h \
+./objects/motor.o: ..\Hardware\car\motor.c ..\Hardware\car\motor.h \
   ..\System\SYS\sys.h ..\User\stm32f10x.h ..\Core\core_cm3.h \
   D:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdint.h \
   ..\Core\cmsis_version.h ..\Core\cmsis_compiler.h \
