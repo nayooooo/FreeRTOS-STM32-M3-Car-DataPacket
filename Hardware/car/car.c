@@ -268,8 +268,6 @@ static void Car_Stop(void)
  */
 static void Car_Set_Wheels_Dir_Duty(void)
 {
-	// bit3		->	右侧车轮占空比低于70
-	// bit2		->	左侧车轮占空比低于70
 	// bit1~0	->	up(10)	down(01)
 	uint8_t dirflag = 0X00;
 	int8_t temp;
@@ -287,12 +285,10 @@ static void Car_Set_Wheels_Dir_Duty(void)
 	} else return;
 	// 计算占空比
 	d1 = 1.0 * temp / 100; d2 = 1.0 * dpr[0].rawData.left_right / 100;
-	f1 = d1 + d2 - d1 * d2;
-	f2 = d1 - d2 + d1 * d2;
+	f1 = d1 + d2 - d1 * d2; f1 = f1 / 2 + 0.5;
+	f2 = d1 - d2 + d1 * d2; f2 = f2 / 2 + 0.5;
 	ld = CAR_WHEELS_DUTY_MIN + f1 * (allW_duty - CAR_WHEELS_DUTY_MIN);
 	rd = CAR_WHEELS_DUTY_MIN + f2 * (allW_duty - CAR_WHEELS_DUTY_MIN);
-	if (ld < CAR_WHEELS_DUTY_MIN) dirflag |= 0X04;
-	if (rd < CAR_WHEELS_DUTY_MIN) dirflag |= 0X08;
 	// 最终确定各个车轮的状态
 	wheels[0].duty = ld; wheels[1].duty = rd;
 	wheels[2].duty = ld; wheels[3].duty = rd;
@@ -300,15 +296,6 @@ static void Car_Set_Wheels_Dir_Duty(void)
 		Car_Wheels_Dir_Turn_Forward();
 	} else {  // down
 		Car_Wheels_Dir_Turn_Backward();
-	}
-	if (dirflag&0X04) {
-		Car_Wheels_Dir_TurnLeft();
-		wheels[0].duty = 2 * CAR_WHEELS_DUTY_MIN - ld;
-		wheels[2].duty = 2 * CAR_WHEELS_DUTY_MIN - ld;
-	} else if(dirflag&0X08) {
-		Car_Wheels_Dir_TurnRight();
-		wheels[1].duty = 2 * CAR_WHEELS_DUTY_MIN - rd;
-		wheels[3].duty = 2 * CAR_WHEELS_DUTY_MIN - rd;
 	}
 	// 各参数设定完成，开始更新车轮
 	Car_Move();  // 如果没有进入此函数，说明遥感是默认状态，不需要移动
