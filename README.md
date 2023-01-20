@@ -110,30 +110,41 @@ up_AllDuty用于降低所有车轮的占空比变化步长。
 
 设所有车轮占空比为 `awd`，车轮的最小占空比为 `awmd`，占空比权重的绝对值为 `c1`，占空比偏移权重的绝对值为 `c2`，左侧车轮的占空比为 `ld`，右侧车轮的占空比为 `rd`。两侧车轮占空比的计算方法为，首先计算出占空比相对增量、占空比偏移和占空比补偿，再根据left_right参数确定ld和rd对应的加减操作。则有各侧车轮的占空比如下：
 
+    直行：
+    ld=awmd+(c1/100)(awd-awmd)
+    rd=awmd+(c1/100)(awd-awmd)
     左转：
     ld=awmd+(c1/100)(awd-awmd)-(c2/100)(c1/100)(awd-awmd)
-    rd=awmd+(c1/100)(awd-awmd)+(c2/100)(awd-(c1/100)(awd-awmd))
+    rd=awmd+(c1/100)(awd-awmd)+(c2/100)((awd-awmd)-(c1/100)(awd-awmd))
     右转：
-    ld=awmd+(c1/100)(awd-awmd)+(c2/100)(awd-(c1/100)(awd-awmd))
+    ld=awmd+(c1/100)(awd-awmd)+(c2/100)((awd-awmd)-(c1/100)(awd-awmd))
     rd=awmd+(c1/100)(awd-awmd)-(c2/100)(c1/100)(awd-awmd)
 
-记 `d1=c1/100`，`d2=c2/100`，则有：
+记 `d1=c1/100`，`d2=c2/100` 则有：
 
+    直行：
+    ld=awmd+d1(awd-awmd)
+    rd=awmd+d1(awd-awmd)
     左转：
     ld=awmd+d1(1-d2)(awd-awmd)
-    rd=awmd+d1(1-d2)(awd-awmd)+d2awd
+    rd=awmd+(d1+d2-d1d2)(awd-awmd)
     右转：
-    ld=awmd+d1(1-d2)(awd-awmd)+d2awd
+    ld=awmd+(d1+d2-d1d2)(awd-awmd)
     rd=awmd+d1(1-d2)(awd-awmd)
 
-再记因子 `f1=d1(1-d2)`，`f2=d2`，则有：
+再记因子 `f1=d1`，`f2=d1(1-d2)`，`f3=d1+d2-d1d2` 则有：
 
-    左转：
+    直行：
     ld=awmd+f1(awd-awmd)
-    rd=awmd+f1(awd-awmd)+f2awd
-    右转：
-    ld=awmd+f1(awd-awmd)+f2awd
     rd=awmd+f1(awd-awmd)
+    左转：
+    ld=awmd+f2(awd-awmd)
+    rd=awmd+f3(awd-awmd)
+    右转：
+    ld=awmd+f3(awd-awmd)
+    rd=awmd+f2(awd-awmd)
+
+现在变成了左右两侧为最大程度转向，上下两侧可调整转弯半径。
 
 #### 执行相应动作 ####
 

@@ -268,27 +268,47 @@ static void Car_Stop(void)
  */
 static void Car_Set_Wheels_Dir_Duty(void)
 {
-	// bit1~0	->	up(10)	down(01)
+	// bit3~2	->	right	(10)	left	(01)
+	// bit1~0	->	up		(10)	down	(01)
 	uint8_t dirflag = 0X00;
-	int8_t temp;
+	int8_t c1, c2;
 	uint8_t ld, rd;
-	float d1, d2, f1, f2;
-	// 判断移动方向up or down
+	float f1, f2, f3;
+	// 判断移动方向
+	// up or down
 	if (dpr[0].rawData.up_down > 0) {  // up
 		dirflag |= 0X02;
-		temp = dpr[0].rawData.up_down;
+		c1 = dpr[0].rawData.up_down;
 	} else if (dpr[0].rawData.up_down < 0) {  // down
 		dirflag |= 0X01;
 		// 求得绝对值
-		temp = dpr[0].rawData.up_down - 1;
-		temp = ~temp;
+		c1 = dpr[0].rawData.up_down - 1;
+		c1 = ~c1;
 	} else return;
+	// right or left
+	if (dpr[0].rawData.left_right > 0) {  // right
+		dirflag |= 0X08;
+		c2 = dpr[0].rawData.left_right;
+	} else if (dpr[0].rawData.left_right < 0) {  // left
+		dirflag |= 0X04;
+		// 求绝对值
+		c2 = dpr[0].rawData.left_right - 1;
+		c2 = ~c2;
+	}
 	// 计算占空比
-	d1 = 1.0 * temp / 100; d2 = 1.0 * dpr[0].rawData.left_right / 100;
-	f1 = d1 + d2 - d1 * d2; f1 = f1 / 2 + 0.5;
-	f2 = d1 - d2 + d1 * d2; f2 = f2 / 2 + 0.5;
-	ld = CAR_WHEELS_DUTY_MIN + f1 * (allW_duty - CAR_WHEELS_DUTY_MIN);
-	rd = CAR_WHEELS_DUTY_MIN + f2 * (allW_duty - CAR_WHEELS_DUTY_MIN);
+	f1 = 1.0 * c1 / 100;
+	f2 = 1.0 * c2 / 100;
+	f3 = f1 + f2 - f1 * f2;
+	f2 = f1 * (1 - f2);
+	if (dirflag&0X08) {  // 右转
+		ld = (uint8_t)(CAR_WHEELS_DUTY_MIN + f3 * (allW_duty - CAR_WHEELS_DUTY_MIN));
+		rd = (uint8_t)(CAR_WHEELS_DUTY_MIN + f2 * (allW_duty - CAR_WHEELS_DUTY_MIN));
+	} else if(dirflag&0X04) {  // 左转
+		ld = (uint8_t)(CAR_WHEELS_DUTY_MIN + f2 * (allW_duty - CAR_WHEELS_DUTY_MIN));
+		rd = (uint8_t)(CAR_WHEELS_DUTY_MIN + f3 * (allW_duty - CAR_WHEELS_DUTY_MIN));
+	} else {  // 直行
+		ld = rd = (uint8_t)(CAR_WHEELS_DUTY_MIN + f1 * (allW_duty - CAR_WHEELS_DUTY_MIN));
+	}
 	// 最终确定各个车轮的状态
 	wheels[0].duty = ld; wheels[1].duty = rd;
 	wheels[2].duty = ld; wheels[3].duty = rd;
